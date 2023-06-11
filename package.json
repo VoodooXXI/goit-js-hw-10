@@ -18,21 +18,17 @@
     "url": "https://github.com/voodooxxi/goit-js-hw-10/issues"
   },
   "dependencies": {
-    "@vimeo/player": "^2.20.1",
-    "caniuse-lite": "^1.0.30001497",
-    "flatpickr": "^4.6.13",
-    "lodash": "^4.17.21",
-    "lodash.throttle": "^4.1.1",
     "modern-normalize": "^1.1.0",
     "notiflix": "^3.2.6",
-    "simplelightbox": "^2.14.1",
     "slim-select": "^2.5.0"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.6.0",
     "parcel": "^2.6.0",
+    "parcel-bundler": "^1.12.5",
     "parcel-reporter-clean-dist": "^1.0.4",
     "posthtml-include": "^1.7.4"
   },
-  "browserslist": "> 0.5%, last 2 versions, not dead"
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "main": "index.js"
 }

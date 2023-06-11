@@ -1,74 +1,108 @@
 import SlimSelect from 'slim-select';
-import {
-  fetchBreeds,
-  fetchCatByBreed,
-  showLoader,
-  hideLoader,
-  showCatInfo,
-  hideCatInfo,
-  showError,
-  hideError,
-} from './cat-api.js';
-
-document.addEventListener('DOMContentLoaded', function () {
-  const breedSelect = new SlimSelect({
-    select: '.breed-select',
-  });
-
-  breedSelect.onChange = function () {
-    handleBreedSelect();
-  };
-});
+import Notiflix from 'notiflix';
+import { fetchCatByBreed } from './cat-api.js';
 
 const breedSelect = document.querySelector('.breed-select');
-const loaderElement = document.querySelector('.loader');
-const errorElement = document.querySelector('.error');
-const catInfoElement = document.querySelector('.cat-info');
+const catInfo = document.querySelector('.cat-info');
+const loader = document.querySelector('.loader');
+const error = document.querySelector('.error');
 
-loaderElement.style.display = 'none';
-errorElement.style.display = 'none';
-catInfoElement.style.display = 'none';
+new SlimSelect({
+  select: '.slim-select',
+});
 
-function populateBreedSelect(breeds) {
-  breeds.forEach(breed => {
-    const option = document.createElement('option');
-    option.value = breed.id;
-    option.textContent = breed.name;
-    breedSelect.appendChild(option);
-  });
+function updateCatInfo(cat) {
+  loader.classList.add('hidden');
+  catInfo.classList.remove('hidden');
+  catInfo.innerHTML = '';
+  const image = document.createElement('img');
+  image.src = cat[0].url;
+  image.alt = 'Cat';
+  catInfo.appendChild(image);
+  const name = document.createElement('h2');
+  name.textContent = cat[0].breeds[0].name;
+  catInfo.appendChild(name);
+  const description = document.createElement('p');
+  description.textContent = cat[0].breeds[0].description;
+  catInfo.appendChild(description);
+  const temper = document.createElement('p');
+  temper.textContent = 'Temper: ' + cat[0].breeds[0].temperament;
+  catInfo.appendChild(temper);
 }
 
-function handleBreedSelect() {
-  const breedId = breedSelect.selected().value();
-
-  if (breedId) {
-    hideCatInfo();
-    showLoader();
-    hideError();
-
-    fetchCatByBreed(breedId)
-      .then(cat => {
-        showCatInfo(cat);
-      })
-      .catch(error => {
-        console.error(error);
-        showError();
-      })
-      .finally(() => {
-        hideLoader();
-      });
-  }
+function showLoader() {
+  breedSelect.classList.add('hidden');
+  catInfo.classList.add('hidden');
+  loader.classList.remove('hidden');
+  error.classList.add('hidden');
 }
-
+function hideLoader() {
+  breedSelect.classList.remove('hidden');
+  catInfo.classList.remove('hidden');
+  loader.classList.add('hidden');
+}
+function showError() {
+  breedSelect.classList.add('hidden');
+  catInfo.classList.add('hidden');
+  loader.classList.add('hidden');
+  error.classList.remove('hidden');
+}
 showLoader();
 
-fetchBreeds()
-  .then(breeds => {
-    populateBreedSelect(breeds);
-  })
-  .catch(error => {
-    console.error(error);
-  })
-  .finally(() => {
-    hideLoader();
+const API_KEY =
+  'live_PC2iVW9cXLSUeiKvrOtmdL8GeH6tSoXdG4Sorq2YWfnrLHMRr8bovoXYQ4nZHXEL';
+
+fetch('https://api.thecatapi.com/v1/breeds', { method: 'GET' })
+  .then(serverPromise =>
+    serverPromise
+      .json()
+      .then(cats => {
+        cats.forEach(cat => {
+          const option = document.createElement('option');
+          option.textContent = cat.name;
+          option.value = cat.id;
+          breedSelect.add(option);
+        });
+        hideLoader();
+      })
+      .catch(e => console.log(e))
+  )
+  .catch(e => {
+    Notiflix.Notify.failure('Failed to fetch breeds:'), error;
   });
+
+let img = '';
+
+breedSelect.addEventListener('change', event => {
+  const catId = event.target.value;
+  showLoader();
+  fetch(
+    `https://api.thecatapi.com/v1/images/search?limit=1&breed_ids=${catId}&api_key=${API_KEY}`
+  )
+    .then(res => {
+      res
+        .json()
+        .then(cat => {
+          var image = new Image();
+          image.url = cat[0].url;
+          console.log(image.url);
+          catInfo.innerHTML = `<img src=${image.url}>`;
+        })
+        .catch(e => console.log(e));
+    })
+    .catch(e => console.log(e));
+});
+
+breedSelect.addEventListener('change', () => {
+  const selectedBreedId = breedSelect.value;
+  showLoader();
+  fetchCatByBreed(selectedBreedId)
+    .then(cat => {
+      updateCatInfo(cat);
+      hideLoader();
+    })
+    .catch(error => {
+      Notiflix.Notify.failure(document.querySelector('.error'), error);
+      showError();
+    });
+});
